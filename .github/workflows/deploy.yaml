@@ -1,0 +1,40 @@
+# .github/workflows/deploy.yml
+name: Deploy Static Website to AWS
+
+on:
+  push:
+    branches:
+      - main  # Triggers the workflow on push to the main branch
+
+permissions:
+  id-token: write  # Required for requesting the JWT to assume AWS IAM Role via OIDC
+  contents: read   # Required to checkout the repository
+
+jobs:
+  deploy:
+    name: Build and Deploy to S3
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the source code from GitHub
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Configure AWS Credentials using OpenID Connect (OIDC)
+      # Secure method: Avoids saving long-lived IAM Access Keys in GitHub Secrets
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsWorkflowRole # REPLACE WITH YOUR IAM ROLE ARN
+          aws-region: us-east-1 # REPLACE WITH YOUR TARGET REGION
+          audience: ://amazonaws.com
+
+      # Step 3: Sync the 'src/' folder to the Amazon S3 Bucket
+      - name: Deploy static site to Amazon S3
+        run: |
+          aws s3 sync ./src/ s3://your-s3-bucket-name/ --delete
+          
+      # Step 4: (Optional) Invalidate CloudFront Cache if you use a CDN
+      # - name: Invalidate CloudFront Distribution
+      #   run: |
+      #     aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"

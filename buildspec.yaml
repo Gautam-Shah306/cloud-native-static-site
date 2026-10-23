@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "No external libraries or build runtimes required for static assets."
+  pre_build:
+    commands:
+      - echo "Validating web source code..."
+      - test -f src/index.html || (echo "Error: src/index.html not found!" && exit 1)
+  build:
+    commands:
+      - echo "Build phase skipped. CodePipeline will natively sync artifacts to S3."
+artifacts:
+  files:
+    - '**/*'
+  base-directory: src
